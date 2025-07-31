@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dog API Data Display</title>
+</head>
+<body>
+  <h1>Dog API Data Display</h1>
+  <div id="api-data">Loading...</div>
+
+  <script>
+    // Real Dog API endpoint to get list of dog breeds
+    const apiUrl = 'https://api.thedogapi.com/v1/breeds';
+
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        // Display the number of breeds fetched
+        document.getElementById('api-data').innerText = `Number of dog breeds: ${data.length}`;
+
+        // Display first 5 breed names in a list
+        const list = document.createElement('ul');
+        data.slice(0, 5).forEach(breed => {
+          const item = document.createElement('li');
+          item.textContent = breed.name;
+          list.appendChild(item);
+        });
+        const container = document.getElementById('api-data');
+        container.innerHTML = '';
+        container.appendChild(list);
+      })
+      .catch(error => {
+        document.getElementById('api-data').innerText = 'Failed to load data.';
+        console.error('Error fetching API:', error);
+      });
+  </script>
+</body>
+</html>
