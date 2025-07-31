@@ -1,39 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dog API Data Display</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Impressive Weather App</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .container {
+    background: rgba(0,0,0,0.4);
+    padding: 30px 40px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 25px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+  }
+  input[type="text"] {
+    padding: 12px 15px;
+    width: 80%;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-right: 8px;
+  }
+  button {
+    padding: 12px 18px;
+    font-size: 16px;
+    background: #4caf50;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #45a049;
+  }
+  #weatherResult {
+    margin-top: 30px;
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+  }
+  .weather-icon {
+    width: 80px;
+    height: 80px;
+  }
+  .temp {
+    font-size: 48px;
+    font-weight: 700;
+    margin: 10px 0;
+  }
+  .desc {
+    font-style: italic;
+    font-size: 20px;
+    margin-bottom: 10px;
+    text-transform: capitalize;
+  }
+  .details {
+    font-size: 16px;
+  }
+  .error {
+    color: #ff4c4c;
+    font-weight: 700;
+    margin-top: 20px;
+  }
+  @media(max-width: 450px) {
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 10px;
+      margin-right: 0;
+    }
+    button {
+      width: 100%;
+    }
+  }
+</style>
 </head>
 <body>
-  <h1>Dog API Data Display</h1>
-  <div id="api-data">Loading...</div>
+  <div class="container">
+    <h1>Weather App</h1>
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weatherResult"></div>
+  </div>
 
   <script>
-    // Real Dog API endpoint to get list of dog breeds
-    const apiUrl = 'https://api.thedogapi.com/v1/breeds';
+    async function getWeather() {
+      const apiKey = '90406a8be1495203a09c3c823244bace';
+      const city = document.getElementById("cityInput").value.trim();
+      const weatherDiv = document.getElementById("weatherResult");
 
-    fetch(apiUrl)
-      .then(response => response.json())
-      .then(data => {
-        // Display the number of breeds fetched
-        document.getElementById('api-data').innerText = `Number of dog breeds: ${data.length}`;
+      if (!city) {
+        weatherDiv.innerHTML = '<p class="error">Please enter a city name.</p>';
+        return;
+      }
 
-        // Display first 5 breed names in a list
-        const list = document.createElement('ul');
-        data.slice(0, 5).forEach(breed => {
-          const item = document.createElement('li');
-          item.textContent = breed.name;
-          list.appendChild(item);
-        });
-        const container = document.getElementById('api-data');
-        container.innerHTML = '';
-        container.appendChild(list);
-      })
-      .catch(error => {
-        document.getElementById('api-data').innerText = 'Failed to load data.';
-        console.error('Error fetching API:', error);
-      });
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+
+      weatherDiv.innerHTML = `<p>Loading...</p>`;
+
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            weatherDiv.innerHTML = `<p class="error">City not found. Please try again.</p>`;
+          } else if (response.status === 401) {
+            weatherDiv.innerHTML = `<p class="error">Invalid API key. Please check your API key.</p>`;
+          } else {
+            weatherDiv.innerHTML = `<p class="error">Error: ${response.status} - ${response.statusText}</p>`;
+          }
+          return;
+        }
+
+        const data = await response.json();
+
+        const icon = data.weather[0].icon;
+        const description = data.weather[0].description;
+        const temp = data.main.temp.toFixed(1);
+        const humidity = data.main.humidity;
+        const windSpeed = data.wind.speed;
+
+        weatherDiv.innerHTML = `
+          <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}" class="weather-icon" />
+          <div class="temp">${temp}°C</div>
+          <div class="desc">${description}</div>
+          <div class="details">Humidity: ${humidity}%</div>
+          <div class="details">Wind Speed: ${windSpeed} m/s</div>
+        `;
+      } catch (error) {
+        weatherDiv.innerHTML = `<p class="error">Failed to fetch weather data. Please try again later.</p>`;
+        console.error(error);
+      }
+    }
   </script>
 </body>
 </html>
